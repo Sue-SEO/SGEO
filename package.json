@@ -1,0 +1,25 @@
+{
+  "name": "sgeo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "@supabase/supabase-js": "2.45.4",
+    "papaparse": "5.4.1"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "@types/node": "22.7.4",
+    "@types/react": "19.0.1",
+    "@types/react-dom": "19.0.2",
+    "@types/papaparse": "5.3.14"
+  }
+}
