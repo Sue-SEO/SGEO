@@ -13,10 +13,10 @@ const modules: ModuleCard[] = [
     status: "可用",
   },
   {
-    href: "#",
+    href: "/gsc",
     title: "GSC 排名与流量",
     desc: "自动拉取 Google Search Console 数据，识别快速提升机会与内容衰减页面。",
-    status: "规划中",
+    status: "可用",
   },
   {
     href: "#",
@@ -38,7 +38,7 @@ export default function Home() {
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "48px 24px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 600, letterSpacing: "-0.01em" }}>SGEO</h1>
         <p style={{ color: "#5B6472", fontSize: "14px", marginTop: "6px", maxWidth: "560px" }}>
-          Sue的S-GEO系统
+          SEO 与 GEO 数据整合系统。以确定性数据源和规则引擎为主，AI 只用在少数需要语义判断的地方。
         </p>
 
         <div
