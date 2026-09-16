@@ -4,7 +4,7 @@
 // 好处：以后如果要换数据库、加缓存、加日志，只需要改这一个文件。
 
 import { supabase } from "./supabaseClient";
-import type { KeywordRow, KeywordUiRow, KeywordCategory } from "./types";
+import type { KeywordRow, KeywordUiRow, KeywordCategory, GscPerformanceRow } from "./types";
 
 function dbRowToUiRow(d: KeywordRow): KeywordUiRow {
   return {
@@ -60,4 +60,35 @@ export function isValidCategory(value: string): value is KeywordCategory {
   return ["pending", "relevant", "competitor", "negative", "irrelevant", "uncertain"].includes(
     value
   );
+}
+
+// ---- GSC 排名数据 ----
+
+export async function saveGscPerformance(
+  rows: GscPerformanceRow[]
+): Promise<{ ok: boolean; error?: string; count: number }> {
+  if (rows.length === 0) return { ok: true, count: 0 };
+
+  const chunkSize = 500;
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const chunk = rows.slice(i, i + chunkSize);
+    const { error } = await supabase
+      .from("gsc_performance")
+      .upsert(chunk, { onConflict: "page_url,query,date" });
+    if (error) {
+      return { ok: false, error: error.message, count: i };
+    }
+  }
+  return { ok: true, count: rows.length };
+}
+
+export async function fetchGscPerformanceRows(limit = 1000): Promise<GscPerformanceRow[]> {
+  const { data, error } = await supabase
+    .from("gsc_performance")
+    .select("page_url, query, date, clicks, impressions, ctr, position")
+    .order("date", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data as GscPerformanceRow[];
 }

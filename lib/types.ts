@@ -1,50 +1,94 @@
-// 项目共享的类型定义。
-// 新模块（GSC数据、审计问题等）如果需要新类型，也统一加在这个文件里，
-// 不要在各自的组件文件里各自定义相似的类型。
+// 关键词表的数据访问层。
+// 任何页面/组件需要读写 keywords 表，都通过这里的函数，
+// 不要在组件里直接写 supabase.from("keywords")...
+// 好处：以后如果要换数据库、加缓存、加日志，只需要改这一个文件。
 
-/** 关键词分类结果。规则引擎和AI语义判断最终都归到这几类里 */
-export type KeywordCategory =
-  | "pending" // 还没处理
-  | "relevant" // 保留：与业务相关，适合作为SEO目标词
-  | "competitor" // 竞品词：命中竞品品牌名单
-  | "negative" // 已排除：命中人工设置的排除规则词
-  | "irrelevant" // 不相关：AI判断为主题不符
-  | "uncertain"; // 待复核：AI也无法判断，需要人工看
+import { supabase } from "./supabaseClient";
+import type { KeywordRow, KeywordUiRow, KeywordCategory, GscPerformanceRow } from "./types";
 
-/** 关键词行，对应 Supabase 的 keywords 表 */
-export interface KeywordRow {
-  id: string;
-  keyword: string;
-  seed_topic: string | null;
-  category: KeywordCategory;
-  search_volume: number | null;
-  kd: number | null;
-  cpc: number | null;
-  reason: string | null;
-  source: string | null;
-  created_at?: string;
+function dbRowToUiRow(d: KeywordRow): KeywordUiRow {
+  return {
+    id: d.id,
+    keyword: d.keyword,
+    volume: d.search_volume,
+    kd: d.kd,
+    cpc: d.cpc,
+    category: d.category,
+    reason: d.reason || "",
+  };
 }
 
-/** 前端组件里使用的关键词形状（字段名更贴近UI，volume而不是search_volume） */
-export interface KeywordUiRow {
-  id: string;
-  keyword: string;
-  volume: number | null;
-  kd: number | null;
-  cpc: number | null;
-  category: KeywordCategory;
-  reason: string;
+export async function fetchKeywords(limit = 5000): Promise<KeywordUiRow[]> {
+  const { data, error } = await supabase
+    .from("keywords")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return (data as KeywordRow[]).map(dbRowToUiRow);
 }
 
-/** /api/classify 接口返回的单条分类结果 */
-export interface ClassifyResultItem {
-  i: number;
-  c: "relevant" | "irrelevant" | "uncertain";
-  n: string;
+export async function saveKeywords(
+  rows: KeywordUiRow[],
+  seedTopic: string
+): Promise<{ ok: boolean; error?: string; count: number }> {
+  const payload: Omit<KeywordRow, "created_at">[] = rows.map((r) => ({
+    id: r.id,
+    keyword: r.keyword,
+    seed_topic: seedTopic || null,
+    category: r.category,
+    search_volume: r.volume,
+    kd: r.kd,
+    cpc: r.cpc,
+    reason: r.reason || null,
+    source: "keyword_sorter",
+  }));
+
+  const chunkSize = 500;
+  for (let i = 0; i < payload.length; i += chunkSize) {
+    const chunk = payload.slice(i, i + chunkSize);
+    const { error } = await supabase.from("keywords").upsert(chunk, { onConflict: "id" });
+    if (error) {
+      return { ok: false, error: error.message, count: i };
+    }
+  }
+  return { ok: true, count: payload.length };
 }
 
-/** /api/classify 接口的请求体 */
-export interface ClassifyRequest {
-  topic: string;
-  batch: { keyword: string }[];
+export function isValidCategory(value: string): value is KeywordCategory {
+  return ["pending", "relevant", "competitor", "negative", "irrelevant", "uncertain"].includes(
+    value
+  );
+}
+
+// ---- GSC 排名数据 ----
+
+export async function saveGscPerformance(
+  rows: GscPerformanceRow[]
+): Promise<{ ok: boolean; error?: string; count: number }> {
+  if (rows.length === 0) return { ok: true, count: 0 };
+
+  const chunkSize = 500;
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const chunk = rows.slice(i, i + chunkSize);
+    const { error } = await supabase
+      .from("gsc_performance")
+      .upsert(chunk, { onConflict: "page_url,query,date" });
+    if (error) {
+      return { ok: false, error: error.message, count: i };
+    }
+  }
+  return { ok: true, count: rows.length };
+}
+
+export async function fetchGscPerformanceRows(limit = 1000): Promise<GscPerformanceRow[]> {
+  const { data, error } = await supabase
+    .from("gsc_performance")
+    .select("page_url, query, date, clicks, impressions, ctr, position")
+    .order("date", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data as GscPerformanceRow[];
 }
