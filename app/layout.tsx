@@ -5,6 +5,9 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "SGEO · SEO数据整合与分拣系统",
   description: "SEO与GEO数据整合、规则引擎与关键词分拣工具",
+  verification: {
+    google: "GLzDMnMJNrK3vFa3FbBKHmaprFbOWR0O66y9ecoIsjw",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
