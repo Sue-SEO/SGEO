@@ -38,7 +38,7 @@ export default function Home() {
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "48px 24px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 600, letterSpacing: "-0.01em" }}>SGEO</h1>
         <p style={{ color: "#5B6472", fontSize: "14px", marginTop: "6px", maxWidth: "560px" }}>
-          SEO 与 GEO 数据整合系统。以确定性数据源和规则引擎为主，AI 只用在少数需要语义判断的地方。
+          Sue的S-GEO系统
         </p>
 
         <div
