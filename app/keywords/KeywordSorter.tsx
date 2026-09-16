@@ -62,10 +62,13 @@ function parseInput(text: string): KeywordUiRow[] {
   if (looksLikeHeader) {
     startIdx = 1;
     header.forEach((h, i) => {
-      if (/keyword|关键词/i.test(h)) colMap.kw = i;
-      else if (/volume|搜索量|search vol/i.test(h)) colMap.vol = i;
-      else if (/difficulty|^kd$|难度/i.test(h)) colMap.kd = i;
+      // 顺序很重要："Keyword Difficulty" 这个表头本身包含"Keyword"字样，
+      // 必须先判断更具体的 difficulty/cpc/volume，最后才轮到笼统的 keyword，
+      // 否则会把 KD 列误判成关键词列。
+      if (/difficulty|^kd$|难度/i.test(h)) colMap.kd = i;
       else if (/cpc/i.test(h)) colMap.cpc = i;
+      else if (/volume|搜索量|search vol/i.test(h)) colMap.vol = i;
+      else if (/keyword|关键词/i.test(h)) colMap.kw = i;
     });
   }
 
