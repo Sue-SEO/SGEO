@@ -11,10 +11,14 @@
 
 ## 技术栈
 
-- **前端 / 后端**：Next.js 14（App Router），同一个项目里既有页面也有 API 路由
+- **前端 / 后端**：Next.js 16（App Router）+ TypeScript，同一个项目里既有页面也有 API 路由
 - **数据库**：Supabase（托管 Postgres），存储关键词、分类结果、导入记录
 - **AI**：Claude API（`claude-sonnet-5`），仅在 `/api/classify` 这一个服务器端接口里调用，密钥不暴露给浏览器
 - **部署**：Vercel
+
+## 架构约定
+
+详细的目录结构规则、新增模块的标准步骤、代码风格约定，见 [`CLAUDE.md`](./CLAUDE.md)。这份文件是给以后继续开发这个项目的人（包括 AI）看的，新增功能前建议先看一眼。
 
 ## 目录结构
 
